@@ -12,6 +12,7 @@ Usage:
 
 import os
 import sys
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -20,7 +21,8 @@ from rich.live import Live
 from helpers.download_utils import save_file_with_progress, run_in_parallel
 from helpers.progress_utils import create_progress_bar, create_progress_table
 from helpers.anime_utils import (
-    extract_anime_id, extract_anime_name, get_episode_ids, get_episodes_urls
+    extract_anime_id, extract_anime_name, get_episode_ids,
+    generate_episodes_urls
 )
 
 SCRIPT_NAME = os.path.basename(__file__)
@@ -83,7 +85,7 @@ def get_download_links(episodes_urls):
 
     return embed_urls
 
-def get_episode_file_name(download_link):
+def get_episode_filename(download_link):
     """
     Extract the file name from the provided episode download link.
 
@@ -94,11 +96,8 @@ def get_episode_file_name(download_link):
         str: The extracted file name, or None if the link is None or empty.
     """
     if download_link:
-        try:
-            return download_link.split('/')[-1]
-
-        except IndexError as indx_err:
-            print(f"Error while extracting the file name: {indx_err}")
+        parsed_url = urlparse(download_link)
+        return os.path.basename(parsed_url.path)
 
     return None
 
@@ -116,21 +115,15 @@ def download_episode(download_link, download_path, task_info):
             - task: The specific task being tracked.
             - overall_task: The overall progress task being updated.
 
-    Prints:
-        Progress messages during the download process, updating the user on the
-        completion percentage of the episode download.
-
     Raises:
         requests.RequestException: If there is an error with the HTTP request,
                                    such as connectivity issues or invalid URLs.
-        OSError: If there is an error with file operations, such as writing to
-                 disk or permission issues.
     """
     try:
         response = requests.get(download_link, stream=True, timeout=TIMEOUT)
         response.raise_for_status()
 
-        file_name = get_episode_file_name(download_link)
+        file_name = get_episode_filename(download_link)
         final_path = os.path.join(download_path, file_name)
         save_file_with_progress(response, final_path, task_info)
 
@@ -144,12 +137,7 @@ def download_anime(anime_name, download_links, download_path):
     Args:
         anime_name (str): The name of the anime being downloaded.
         download_links (list): List of URLs for downloading each episode.
-        total_episodes (int): Total number of episodes to download.
         download_path (str): Directory path where episodes will be saved.
-
-    Prints:
-        Progress messages for downloading each episode and completion message
-        when all episodes are downloaded.
     """
     job_progress = create_progress_bar()
     progress_table = create_progress_table(anime_name, job_progress)
@@ -219,13 +207,13 @@ def process_anime_download(url):
     soup = fetch_page(url)
 
     try:
-        (anime_id, host_page) = extract_anime_id(url)
+        (host_page, anime_id) = extract_anime_id(url)
         anime_name = extract_anime_name(soup)
 
         download_path = create_download_directory(anime_name)
 
         episode_ids = get_episode_ids(soup)
-        episodes_urls = get_episodes_urls(host_page, anime_id, episode_ids)
+        episodes_urls = generate_episodes_urls(host_page, anime_id, episode_ids)
 
         download_links = get_download_links(episodes_urls)
         download_anime(anime_name, download_links, download_path)

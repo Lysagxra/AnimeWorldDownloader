@@ -4,26 +4,37 @@ and constructing episode URLs for downloading. It utilizes BeautifulSoup for
 parsing HTML content and includes error handling for common extraction issues.
 """
 
+from urllib.parse import urlparse
+
 def extract_anime_id(url):
     """
-    Extracts the Anime ID and host page URL from a given argument URL.
+    Extracts the host page and anime ID from a given URL.
 
     Args:
-        url (str): The URL from which Anime ID is to be extracted.
+        url (str): The URL from which anime ID is to be extracted.
 
     Returns:
         tuple: A tuple containing:
-            - anime_id (str): The extracted Anime ID.
-            - hostpage (str): The constructed host page URL based on domain.
+            - anime_id (str): The extracted anime ID.
+            - host_page (str): The extracted host page.
 
     Raises:
         ValueError: If the URL format is invalid.
     """
     try:
-        domain = url.split('.')[2].split('/')[0]
-        host_page = f"https://www.animeworld.{domain}/play/"
-        anime_id = url.split('/')[-2]
-        return anime_id, host_page
+        parsed_url = urlparse(url)
+        path_segments = parsed_url.path.strip('/').split('/')
+
+        if len(path_segments) < 3:
+            raise ValueError("URL does not contain enough path segments.")
+
+        play_tag = path_segments[0]
+        anime_id = path_segments[1]
+        host_page = f"https://{parsed_url.netloc}/{play_tag}/"
+#        domain = parsed_url.netloc.split('.')[-1]
+#        host_page = f"https://www.animeworld.{domain}/play/"
+#        anime_id = url.split('/')[-2]
+        return host_page, anime_id
 
     except IndexError as indx_err:
         raise ValueError("Invalid URL format.") from indx_err
@@ -91,17 +102,18 @@ def get_episode_ids(soup):
     except ValueError as val_err:
         raise ValueError("Error processing episode counts or IDs.") from val_err
 
-def get_episodes_urls(host_page, anime_id, episode_ids):
+def generate_episodes_urls(host_page, anime_id, episode_ids):
     """
     Generates a list of episode URLs for a given anime.
 
     Args:
-    host_page (str): The base URL of the host page.
-    anime_id (str): The unique identifier for the anime.
-    episode_ids (list of str): A list of unique identifiers for each episode.
+        host_page (str): The base URL of the host page.
+        anime_id (str): The unique identifier for the anime.
+        episode_ids (list of str): A list of unique identifiers for each
+                                   episode.
 
     Returns:
-    list of str: A list of formatted URLs for each episode.
+        list of str: A list of formatted URLs for each episode.
     """
     return [
         f"{host_page}{anime_id}/{episode_id}"

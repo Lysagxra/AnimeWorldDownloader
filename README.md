@@ -34,16 +34,22 @@ project-root/
 ## Installation
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/Lysagxra/AnimeWorldDownloader.git
+
+```bash
+git clone https://github.com/Lysagxra/AnimeWorldDownloader.git
+```
 
 2. Navigate to the project directory:
-   ```bash
-   cd AnimeWorldDownloader
+
+```bash
+cd AnimeWorldDownloader
+```
 
 3. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Single Anime Download
 

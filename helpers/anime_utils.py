@@ -63,13 +63,17 @@ def extract_anime_name(soup):
     except AttributeError as attr_err:
         return AttributeError(f"Error extracting anime name: {attr_err}")
 
-def get_episode_ids(soup):
+def get_episode_ids(soup, start_episode=None, end_episode=None):
     """
     Extracts episode IDs and the maximum episode count from parsed HTML soup.
 
     Args:
         soup (BeautifulSoup): The BeautifulSoup object containing the parsed
                               HTML.
+        start_episode (int, optional): The starting episode number (inclusive).
+                                       Defaults to None.
+        end_episode (int, optional): The ending episode number (exclusive).
+                                     Defaults to None.
 
     Returns:
         tuple: A tuple containing:
@@ -90,7 +94,14 @@ def get_episode_ids(soup):
         if not episode_items:
             raise ValueError("No episode items found.")
 
-        return [item.find('a').get('data-id') for item in episode_items]
+        # Determine the correct slice based on start_episode and end_episode
+        start_index = start_episode - 1 if start_episode else 0
+        end_index = end_episode if end_episode else len(episode_items)
+
+        return [
+            item.find('a').get('data-id')
+            for item in episode_items[start_index:end_index]
+        ]
 
     except AttributeError as attr_err:
         raise AttributeError(
@@ -102,7 +113,7 @@ def get_episode_ids(soup):
             "Error processing episode counts or IDs."
         ) from val_err
 
-def generate_episodes_urls(host_page, anime_id, episode_ids):
+def generate_episode_urls(host_page, anime_id, episode_ids):
     """
     Generates a list of episode URLs for a given anime.
 

@@ -94,6 +94,17 @@ In this case, the script will download all episodes starting from the `--start` 
 
 1. Create a `URLs.txt` file in the project root and list the anime URLs you want to download.
 
+- Example of `URLs.txt`:
+
+```
+https://www.animeworld.so/play/made-in-abyss.pIzmnA/TNBNCF
+https://www.animeworld.so/play/chainsaw-man.3EoJJ/HhLOwe
+https://www.animeworld.so/play/hellsing-ultimate.w1pCF/ryYu5w
+```
+
+- Ensure that each URL is on its own line without any extra spaces.
+- You can add as many URLs as you need, following the same format.
+
 2. Run the main script via the command line:
 
 ```bash
